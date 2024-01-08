@@ -154,7 +154,3 @@ void writeBMP(char * header, char * rotatedPixelData, char * otherData, long lon
 
   
 }
-
-
-
-  //Τα πιο όμορφα structs είναι τα ωραίys;
