@@ -41,9 +41,9 @@ void readBMP(char header[54], char **otherData, char **pixelDataPadded,long long
   *otherDataSize = offset - MIN_HEADER_SIZE;
   *otherData = malloc(*otherDataSize);
   int read2 = fread(*otherData, *otherDataSize, 1,stdin);
-  // if(read2!= 1){
-  //   exit(1);
-  // }
+    if(read2 != *otherDataSize){
+      exit(1);
+    }
 
 //Reads pixelData
   *width = *(int*)&header[18];
@@ -52,21 +52,23 @@ void readBMP(char header[54], char **otherData, char **pixelDataPadded,long long
   //Goes to the greater and closest multple of four of width to add the padding;
   int pixelWidth = (*width)*3 /*because of RGB*/;
   int remainder = pixelWidth % 4;
-  *sizeOfPadding = 4 - remainder;
-  int pixelWidthPadded = pixelWidth + *sizeOfPadding;
+  if(remainder == 0){
+        *sizeOfPadding = 0;
+    }
+    else{
+        *sizeOfPadding = 4 - remainder;
+    }
+    int pixelWidthPadded = pixelWidth + *sizeOfPadding;
 
   int pixelDataPaddedSize = (*height) * pixelWidthPadded;
 
   // fprintf(stderr, "pixelDataPaddedSize is : %d \n", pixelDataPaddedSize);
   
-  *pixelDataPadded = malloc(pixelDataPaddedSize + 1);
+  *pixelDataPadded = malloc(pixelDataPaddedSize);
   int read3 = fread(*pixelDataPadded, pixelDataPaddedSize,1, stdin);
-  // if(read3!= 1){
-  //     exit(1);
-
-  //   }
-              // fprintf(stderr, "pdp1 is : %c \n", *pixelDataPadded[1]);
-
+  if(read3 == 0){
+      exit(1);
+    }
 }
 
 void rotateBMP(char **finalPixelData,char header[MIN_HEADER_SIZE],char*pixelDataPadded, long long int width, long long int height, long long int oldPadding, long long int * newPixelWidthPadded, long long int * newHeight){
@@ -80,7 +82,7 @@ void rotateBMP(char **finalPixelData,char header[MIN_HEADER_SIZE],char*pixelData
 
 //Rotates Pixel Data
   //Removes Old Padding
-  char * pixelData = malloc(3*width*height + 1);
+  char * pixelData = malloc(3*width*height);
   long long int index = 0;
     for (long long int i = 0; i < height; i++) {
         for (long long int j = 0; j < width*3; j++) {
@@ -118,12 +120,10 @@ void rotateBMP(char **finalPixelData,char header[MIN_HEADER_SIZE],char*pixelData
   else{
       sizeOfPadding = 4 - remainder;
   } 
-  * newPixelWidthPadded = newPixelWidth + sizeOfPadding;
+  *newPixelWidthPadded = newPixelWidth + sizeOfPadding;
 
   //Adds padding to rotatedPixelData and creates the finalPixelData
   *finalPixelData = malloc((*newPixelWidthPadded) * (*newHeight));
-
-//long long int testt = 0;
 
   long long int index3 = 0;
   for(long long int i = 0; i< *newHeight; i++){
@@ -132,10 +132,6 @@ void rotateBMP(char **finalPixelData,char header[MIN_HEADER_SIZE],char*pixelData
     }
     for(long long int k = 0; k<sizeOfPadding; k++){
      (*finalPixelData)[index3++] = 0/*it can be any value*/; 
-
-      //testt++;
-      //fprintf(stderr, "%lld\n", testt);
-
     }
   }
 }
@@ -144,13 +140,7 @@ void rotateBMP(char **finalPixelData,char header[MIN_HEADER_SIZE],char*pixelData
 
 void writeBMP(char * header, char * rotatedPixelData, char * otherData, long long int otherDataSize, long long int newPixelWidthPadded, long long int newHeight){
 
-
-
   fwrite(header,MIN_HEADER_SIZE,1,stdout);
   fwrite(otherData, otherDataSize, 1, stdout);
   fwrite(rotatedPixelData, newPixelWidthPadded*newHeight, 1, stdout);
-
-
-
-  
 }
